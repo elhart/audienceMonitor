@@ -1,0 +1,850 @@
+@*
+ * This template is called from the `index` template. This template
+ * handles the rendering of the page header and body tags. It takes
+ * two arguments, a `String` for the title of the page and an `Html`
+ * object to insert into the body of the page.
+ *@
+@(title: String)
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        @* Here's where we render the page title `String`. *@
+        <title>@title</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+        <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script src="@routes.Assets.versioned("javascripts/d3.slider.js")" type="text/javascript"></script>
+        <script type="text/javascript" src="http://d3js.org/d3.hexbin.v0.min.js"></script>	
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js"></script>
+        <meta content = "text/html; charset = ISO-8859-1" http-equiv = "content-type">
+
+      </head>
+      
+    <body>
+        @* And here's where we render the `Html` object containing
+         * the page content. *@
+         
+        <script>
+        var sliderFlag=0;
+        function openTap(evt, tapName) {
+        	d3.selectAll("svg").remove();
+        	if (sliderFlag<1 && tapName=="byTime"){
+            	callslider('/dbtest/');
+            	sliderFlag=2;
+        	}
+            // Declare all variables
+            var i, tabcontent, tablinks;
+
+            // Get all elements with class="tabcontent" and hide them
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Get all elements with class="tablinks" and remove the class "active"
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tabcontent.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Show the current tab, and add an "active" class to the link that opened the tab
+            document.getElementById(tapName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }//function
+      
+        function drawblob(url) {
+        	d3.selectAll("svg").remove();
+
+			var blobnum= document.getElementById("fld_base_profile_id").value
+			
+			var margin = { top: 40, right: 30, bottom: 20, left: 30},
+		    	w = 710 - margin.left - margin.right,
+		    	h = 600 - margin.top - margin.bottom;
+
+			var lineFunction = d3.svg.line()
+				.interpolate("monotone")
+				.x(function(d) { return d.x; })
+				.y(function(d) { return d.y; });
+
+            d3.json(url+blobnum, function(error, json) {
+                if (error) return console.warn(error);
+                var xScale = d3.scale.linear()
+            		.domain([0, 350])
+            		.range([0, w]);
+            	var yScale = d3.scale.linear()
+            		.domain([0,270])
+            		.range([h, 0]);
+           	 	var xAxis = d3.svg.axis()
+					.scale(xScale)
+					.innerTickSize(-h)
+					.outerTickSize(0)
+					.tickPadding(10)
+					.ticks(10)
+	    			.tickSize(-h, -h)
+					.orient("bottom");
+				typeof(xAxis);
+
+				var yAxis = d3.svg.axis()
+	    			.scale(yScale)
+	    			.innerTickSize(-w)
+					.outerTickSize(0)
+					.tickPadding(10)
+	    			.ticks(10)
+	    			.tickSize(-w, -w)
+	    			.orient("left");
+				typeof(yAxis);
+
+				var svg = d3.select("body").append("svg")
+            		.attr("width", w + margin.left + margin.right)
+            		.attr("height", h + margin.top + margin.bottom)
+          		.append("g")
+            		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                var arc = d3.svg.arc()
+    	    		.innerRadius(200)
+    	    		.outerRadius(199)
+    	    		.startAngle(0.0698-Math.PI/2) //just radians
+    	    		.endAngle(Math.PI/2-.0698) //just radians
+    	    	var arc1 = d3.svg.arc()
+    	    		.innerRadius(300)
+    	    		.outerRadius(299)
+    	    		.startAngle(.0349-Math.PI/2) //just radians
+    	    		.endAngle(Math.PI/2-.0349) //just radians
+    	    	var arc2 = d3.svg.arc()
+    	    		.innerRadius(400)
+    	    		.outerRadius(399)
+    	    		.startAngle(.1-Math.PI/3) //just radians
+    	    		.endAngle(Math.PI/3-.1)
+    			svg.append("path")
+    	    		.attr("d", arc)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    	svg.append("path")
+    	    		.attr("d", arc1)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    	svg.append("path")
+    	    		.attr("d", arc2)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    		
+        	    svg.append("path")
+        	    	.attr("d", lineFunction(json))
+        	    	.attr("stroke", "#addf80")
+        	    	.attr("fill", "none")
+        	   
+        	    svg.selectAll("circle")
+        	        .data(json)
+        	        .enter()
+        	        .append("circle")
+        	            .attr("cx", function(d){return d.x})
+        	            .attr("cy", function(d){return d.y})
+        	            .attr("r",function(d){return 4})
+        	            .attr("fill","#41b6c4")
+                	
+                var yAxisg = svg.append("g")
+                	.attr("class", "y axis")
+                	.call(yAxis)
+                	.append("text")
+              			.attr("y", -12)
+              			.attr("x", 10)
+              			.attr("dy", ".71em")
+              			.style("text-anchor", "end")
+              			.text("cm");
+        	    var xAxisg = svg.append("g")
+        	    	.attr("class", "x axis")
+                	.attr("transform", "translate(0," + h + ")")
+            		.call(xAxis)
+            		.append("text")
+	            		.attr("x", 660)
+          				.attr("dx", ".71em")
+          				.style("text-anchor", "end")
+          				.text("cm");
+        	    svg.append("text")
+                	.attr("x", (w / 2))             
+                	.attr("y", 0 - (margin.top / 3))
+                	.attr("text-anchor", "middle")  
+                	.style("font-size", "16px") 
+                	.style("fill", "white")
+                	.text("Path for person with ID "+blobnum);
+	            });
+        }//function
+
+        function callslider(url){
+    		d3.selectAll("svg").remove();
+        	formatDate = d3.time.format("%Y-%m-%d %H:%M:%S");
+        	d3.json("/dbtest/maxmin", function(error, date) {
+                if (error) return console.warn(error);
+                var minTime=new Date(d3.min(date, function(d) { return d.mintime; }));
+        		var maxTime=new Date(d3.max(date, function(d) { return d.maxtime; }));
+        		d3.select('#slider').call(d3.slider().scale(d3.time.scale().domain([minTime, maxTime])).axis(d3.svg.axis()).value([minTime, maxTime]).on("slide", function(evt, value) {
+            		document.getElementById("date1").value = formatDate(new Date(value[ 0 ]));
+            		document.getElementById("date2").value = formatDate(new Date(value[ 1 ]));
+        		}));//call slider
+        	});//json
+        	}//function
+    	
+    	function drawtime(url){
+        	d3.selectAll("svg").remove();
+        	formatDate = d3.time.format("%Y-%m-%d %H:%M:%S");
+        	var fDate= document.getElementById("date1").value;
+			var eDate= document.getElementById("date2").value;
+
+			d3.selectAll("svg").remove();
+			var margin = { top: 40, right: 30, bottom: 20, left: 30},
+	    		w = 710 - margin.left - margin.right,
+	    		h = 600 - margin.top - margin.bottom;
+
+  			var svg = d3.select("body").append("svg")
+       			.attr("width", w + margin.left + margin.right)
+       			.attr("height", h + margin.top + margin.bottom)
+     			.append("g")
+       			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		
+			var lineFunction = d3.svg.line()
+				.interpolate("monotone")
+				.x(function(d) { return d.x;})
+				.y(function(d) { return d.y;});
+
+			var timeScale = d3.time.scale()
+		  		.domain([fDate, eDate])
+		  		.range([0, w])
+		  		.clamp(true);
+		  
+		  	d3.json(url+fDate+"/"+eDate, function(error, json) {
+			  	if (error) return console.warn(error);
+
+                var xScale = d3.scale.linear()
+                	.domain([0, 350])
+                	.range([0, w]);
+                var yScale = d3.scale.linear()
+                	.domain([0,270])
+                	.range([h, 0]);
+            	
+                var xAxis = d3.svg.axis()
+					.scale(xScale)
+					.innerTickSize(-h)
+    				.outerTickSize(0)
+    				.tickPadding(10)
+    				.ticks(10)
+		    		.tickSize(-h, -h)
+    				.orient("bottom");
+				typeof(xAxis);
+				var yAxis = d3.svg.axis()
+		    		.scale(yScale)
+		    		.innerTickSize(-w)
+    				.outerTickSize(0)
+    				.tickPadding(10)
+		    		.ticks(10)
+		    		.tickSize(-w, -w)
+		    		.orient("left");
+				typeof(yAxis);
+            				
+                var ids=[];//used for drawing paths per each blob
+                for (var i=0;i<json.length;i++){
+                    var blob = json[i];
+                    if (!ids[blob.id]){
+                        ids[blob.id] =[];
+                    }//if
+                    ids[blob.id].push({x: blob.x,y: blob.y,time: blob.time});
+                }//for
+                
+        		var yAxisg = svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis)
+					.append("text")
+              			.attr("y", -12)
+              			.attr("x", 10)
+              			.attr("dy", ".71em")
+              			.style("text-anchor", "end")
+              			.text("cm");
+				var xAxisg = svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + h + ")")
+					.call(xAxis)
+					.append("text")
+	            		.attr("x", 660)
+          				.attr("dx", ".71em")
+          				.style("text-anchor", "end")
+          				.text("cm");
+
+                function drawIds(element, index, array){
+                    var x = Math.floor((Math.random()*400));
+                    var y = Math.floor((Math.random()*400));
+                    var z = Math.floor((Math.random()*400));
+                    svg.append("path")
+        	    		.attr("d", lineFunction(element))
+        	    		.attr("stroke", d3.rgb(x, y, z))
+        	    		.attr("fill", "none");
+    	    		}//function
+    	    		
+                var arc = d3.svg.arc()
+    	    		.innerRadius(200)
+    	    		.outerRadius(199)
+    	    		.startAngle(0.0698-Math.PI/2) //just radians
+    	    		.endAngle(Math.PI/2-.0698) //just radians
+    	    	var arc1 = d3.svg.arc()
+    	    		.innerRadius(300)
+    	    		.outerRadius(299)
+    	    		.startAngle(.0349-Math.PI/2) //just radians
+    	    		.endAngle(Math.PI/2-.0349) //just radians
+    	    	var arc2 = d3.svg.arc()
+    	    		.innerRadius(400)
+    	    		.outerRadius(399)
+    	    		.startAngle(.1-Math.PI/3) //just radians
+    	    		.endAngle(Math.PI/3-.1)
+    			svg.append("path")
+    	    		.attr("d", arc)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    	svg.append("path")
+    	    		.attr("d", arc1)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    	svg.append("path")
+    	    		.attr("d", arc2)
+    	    		.attr("transform", "translate(325,550)")
+    	    		.attr("class", "arc")
+    	    		.attr("fill","white")
+    	    		
+                ids.forEach (drawIds);
+                
+                svg.selectAll("circle")
+    	        	.data(json)
+    	        	.enter()
+    	        	.append("circle")
+    	            	.attr("cx", function(d){return d.x})
+    	            	.attr("cy", function(d){return d.y})
+    	            	.attr("r",function(d){return 2})
+    	            	.attr("fill","#41b6c4");
+    	 		svg.append("text")
+              		.attr("x", (w / 2))             
+                   	.attr("y", 0 - (margin.top / 3))
+                   	.attr("text-anchor", "middle")  
+            		.style("font-size", "16px") 
+            		.style("fill", "white")  
+                   	.text("Paths for person passing by display between "+fDate+" and "+eDate);
+
+        		});//d3.json
+    		}//function
+
+        function distrib(url){
+            var maxt=200;
+            d3.selectAll("svg").remove();
+
+            d3.json(url+"maxmin", function(error, json) {
+                if (error) return console.warn(error);
+	            
+				var values=[];
+				for (var i=0;i<json.length;i++){
+					var blob = json[i];
+					var a= new Date(blob.maxtime);
+					var b =new Date(blob.mintime);
+					if (!values[blob.id]){
+						values[blob.id] =[];
+						values[blob.id]=Math.abs(a-b)/1000;
+						if(Math.abs(a-b)/1000 >maxt){
+							values[blob.id]=maxt;
+						}
+						}//if
+					}//for
+				// A formatter for counts.
+				console.log(d3.max(values));
+				var formatCount = d3.format(",.0f");
+	            var margin = {top: 10, right: 30, bottom: 30, left: 30},
+	            	width = 710 - margin.left - margin.right,
+	            	height = 600 - margin.top - margin.bottom;
+            	var x = d3.scale.linear()
+            		.domain([0, d3.max(values)])
+            		.range([20, width]);
+        		// Generate a histogram using tenth uniformly-spaced bins.
+	            var data = d3.layout.histogram()
+	            	.bins(x.ticks(10))
+	            	(values);
+
+            	var y = d3.scale.linear()
+            		.domain([0, d3.max(data, function(d) { return d.y; })])
+	            	.range([height, 0]);
+
+	            var xAxis = d3.svg.axis()
+	            	.scale(x)
+	           		.orient("bottom");
+	            var svg = d3.select("body").append("svg")
+	            	.attr("width", width + margin.left + margin.right)
+	            	.attr("height", height + margin.top + margin.bottom)
+	            	.append("g")
+	            		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	            var bar = svg.selectAll(".bar")
+	            	.data(data)
+	            	.enter().append("g")
+	            	    .attr("class", "bar")
+	            	    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+        	    bar.append("rect")
+        	    	.attr("x", 1)
+					.attr("width", x(data[0].dx) - 21)
+					.attr("height", function(d) {return height - y(d.y); });
+	            bar.append("text")
+	            	.attr("dy", ".75em")
+	            	.attr("y", 6)
+	            	.attr("x", x(data[0].dx) / 2)
+	            	.attr("text-anchor", "end")
+	            	.text(function(d) { return formatCount(d.y); });
+            	svg.append("g")
+	            	.attr("class", "x axis")
+	            	.attr("transform", "translate(0," + height + ")")
+	            	.call(xAxis)
+	            	.append("text")
+	            		.attr("x", 660)
+          				.attr("dx", ".71em")
+          				.style("text-anchor", "end")
+          				.text("Sec");
+            	var yAxis = d3.svg.axis()
+            	.scale(y)
+            	.orient("left")
+            	.ticks(10,"s");
+        	
+    	   		svg.append("g")
+          		.attr("class", "y axis")
+          		.call(yAxis)
+        		.append("text")
+          			.attr("transform", "rotate(-90)")
+          			.attr("y", 6)
+          			.attr("dy", ".71em")
+          			.style("text-anchor", "end")
+          			.text("Number of people");
+            	});//d3.json	
+        	}//function
+
+        function horbar(url){
+            d3.selectAll("svg").remove();
+
+            d3.json(url+"maxmin", function(error, json) {
+                if (error) return console.warn(error);
+                var values=[];
+                for (var i=0;i<json.length;i++){
+                    var blob = json[i];
+	                var a= blob.maxx-blob.minx;
+	                var b =blob.maxy-blob.miny;
+	                if (!values[blob.id]){
+		                values[blob.id] =[];
+		                values[blob.id]=Math.sqrt(a*a+b*b);
+		                }//if
+	                }//for
+	       		// A formatter for counts.
+	       		var formatCount = d3.format(",.0f");
+	       		var margin = {top: 10, right: 30, bottom: 30, left: 50},
+	       			width = 710 - margin.left - margin.right,
+	       			height = 600 - margin.top - margin.bottom;
+       			var x = d3.scale.linear()
+       				.domain([0, d3.max(values)*.54])
+       				.range([0, width]);
+   				// Generate a histogram using tenth uniformly-spaced bins.
+   				var data = d3.layout.histogram()
+   					.bins(x.ticks(10))
+	            	(values);
+        	    var y = d3.scale.linear()
+	            	.domain([0, d3.max(data, function(d) { return d.y; })])
+	            	.range([height, 0]);
+        	    var xAxis = d3.svg.axis()
+	            	.scale(x)
+	            	.orient("bottom");
+        	    var svg = d3.select("body").append("svg")
+	            	.attr("width", width + margin.left + margin.right)
+	            	.attr("height", height + margin.top + margin.bottom)
+	            	.append("g")
+	            		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        	    var bar = svg.selectAll(".bar")
+        	    	.data(data)
+        	    	.enter().append("g")
+        	    		.attr("class", "bar")
+        	    		.attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    	    	bar.append("rect")
+    	    		.attr("x", 1)
+    	    		.attr("width", x(data[0].dx) - 1)
+    	    		.attr("height", function(d) {return height - y(d.y); });
+        	    bar.append("text")
+        	    	.attr("dy", ".75em")
+        	    	.attr("y", 6)
+        	    	.attr("x", x(data[0].dx) / 2)
+        	    	.attr("text-anchor", "middle")
+        	    	.text(function(d) { return formatCount(d.y); });
+        	    svg.append("g")
+        	    	.attr("class", "x axis")
+        	    	.attr("transform", "translate(0," + height + ")")
+        	    	.call(xAxis)
+        	    	.append("text")
+	            		.attr("x", 650)
+          				.attr("dx", ".71em")
+          				.style("text-anchor", "end")
+          				.text("cm");;
+        	    var yAxis = d3.svg.axis()
+                	.scale(y)
+                	.orient("left")
+                	.ticks(10,"s");
+            	
+        	    svg.append("g")
+              	.attr("class", "y axis")
+              	.call(yAxis)
+            	.append("text")
+              		.attr("transform", "rotate(-90)")
+              		.attr("y", 6)
+              		.attr("dy", ".71em")
+              		.style("text-anchor", "end")
+              		.text("Number of people");
+	        	});//d3.json
+			}//function  
+        
+        function heatmap(url){
+        	d3.selectAll("svg").remove();
+        	d3.json(url+"heatmap", function(error, json) {
+                if (error) return console.warn(error);
+                var margin = { top: 0, right: 30, bottom: 30, left: 30 },
+                	width = 710 - margin.left - margin.right,
+                	height = 600 - margin.top - margin.bottom,
+                	gridSize = Math.floor(width / 30),
+                	legendElementWidth = gridSize*2,
+                	buckets = 19,
+                	colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                	y = [60,80,100,120,140,160,180,200,220,240,260,280,300,320,340,360,380,400,420,440,460,480,500],
+                	x = [20,40,60,80,100,120,140,160,180,200,220,240,260,280,300,320,340,360,380,400,420,440,460,480,500,520,540,560,580,600]
+
+            	var svg = d3.select("body").append("svg")
+                	.attr("width", width + margin.left + margin.right)
+                	.attr("height", height + margin.top + margin.bottom)
+                	.append("g")
+                	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    	    
+            	var yLabels = svg.selectAll(".yLabel")
+                	.data(y)
+                	.enter().append("text")
+                  		.text(function (d) { return Math.round(-.54*(d-500)); })
+                  		.attr("x",0)
+                  		.attr("y", function (d, i) { return 40+(i * gridSize); })
+                  		.style("text-anchor", "end")
+                  		.attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                  		.attr("class", "mono");
+            
+            	var xLabels = svg.selectAll(".xLabel")
+                	.data(x)
+                	.enter().append("text")
+                  		.text(function(d) { return Math.round(d*.54); })
+                  		.attr("x", function(d, i) { return i * gridSize; })
+                  		.attr("y", 520)
+                  		.style("text-anchor", "middle")
+                  		.attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                 		.attr("class", "mono");
+
+            	if(d3.max(json, function (d) { return d.count; })>2000){
+                	buckets=2000;
+            	}
+				
+            	if(d3.max(json, function (d) { return d.count; })>7000){
+                	buckets=7000;
+            	}
+            	
+            	var colorScale = d3.scale.quantile()
+            		.domain([0, buckets, d3.max(json, function (d) { return d.count; })])
+            		.range(colors);
+        		
+            	var cards = svg.selectAll(".y")
+            		.data(json, function(d) {return d.x+':'+d.y;});	
+
+           	 	cards.append("title");
+            
+        		cards.enter().append("rect")
+            		.attr("x", function(d) { return (d.x)*10; })
+            		.attr("y", function(d) { return (d.y)*10; })
+            		.attr("rx", 4)
+            		.attr("ry", 4)
+            		.attr("class", "hour bordered")
+            		.attr("width", gridSize)
+            		.attr("height", gridSize)
+            		.style("fill", colors[0]);
+
+        		cards.transition().duration(1000)
+            		.style("fill", function(d) { return colorScale(d.count); });
+
+        		cards.select("title").text(function(d) { return d.count; });
+
+        		cards.exit().remove();
+
+        		var legend = svg.selectAll(".legend")
+            		.data([0].concat(colorScale.quantiles()), function(d) { return d; });
+
+        		legend.enter().append("g")
+            		.attr("class", "legend");
+
+        		legend.append("rect")
+          			.attr("x", function(d, i) { return legendElementWidth * i*1.5; })
+          			.attr("y", height)
+          			.attr("width", legendElementWidth*1.5)
+          			.attr("height", gridSize / 2)
+          			.style("fill", function(d, i) { return colors[i]; });
+
+        		legend.append("text")
+          			.attr("class", "mono")
+          			.text(function(d) { return ">=" + Math.round(d); })
+          			.attr("x", function(d, i) { return legendElementWidth * i*1.5; })
+          			.attr("y", height + gridSize);
+
+        		legend.exit().remove();
+        		var arc = d3.svg.arc()
+	    		.innerRadius(200)
+	    		.outerRadius(199)
+	    		.startAngle(.22-Math.PI/2) //just radians
+	    		.endAngle(Math.PI/2-.22) //just radians
+	    	var arc1 = d3.svg.arc()
+	    		.innerRadius(300)
+	    		.outerRadius(299)
+	    		.startAngle(.19-Math.PI/2) //just radians
+	    		.endAngle(Math.PI/2-.19) //just radians
+	    	var arc2 = d3.svg.arc()
+	    		.innerRadius(400)
+	    		.outerRadius(399)
+	    		.startAngle(.1-Math.PI/3) //just radians
+	    		.endAngle(Math.PI/3-.2)
+			svg.append("path")
+	    		.attr("d", arc)
+	    		.attr("transform", "translate(325,550)")
+	    		.attr("class", "arc")
+	    		.style("stroke-dasharray", ("3, 3"))
+	    		.attr("fill","gray")
+	    	svg.append("path")
+	    		.attr("d", arc1)
+	    		.attr("transform", "translate(325,550)")
+	    		.attr("class", "arc")
+	    		.style("stroke-dasharray", ("3, 3"))
+	    		.attr("fill","gray")
+	    	svg.append("path")
+	    		.attr("d", arc2)
+	    		.attr("transform", "translate(325,550)")
+	    		.attr("class", "arc")
+	    		.style("stroke-dasharray", ("3, 3"))
+	    		.attr("fill","gray")
+	    		svg.append("text")
+          			.attr("x", 650)             
+               		.attr("y", 510)
+               		.attr("text-anchor", "end")  
+        			.style("font-size", "12px") 
+        			.style("fill", "grey")  
+               		.text("cm");
+        		svg.append("text")
+      				.attr("x", 0)             
+           			.attr("y", 30)
+           			.attr("text-anchor", "end")  
+    				.style("font-size", "12px") 
+    				.style("fill", "grey")  
+           			.text("cm");
+        	});//d3.json	
+        }//function
+
+        function history(url){
+        	d3.selectAll("svg").remove();
+        	
+        	var margin = {top: 50, right: 30, bottom: 60, left: 60},
+            width = 710 - margin.left - margin.right,
+            height = 600 - margin.top - margin.bottom;
+
+        	// Parse the date / time
+        	var	parseDate = d3.time.format("%d-%m").parse;
+
+        	var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+        	var y = d3.scale.linear().range([height, 0]);
+
+        	var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .tickFormat(d3.time.format("%d-%m"));
+
+        	var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+            .ticks(10,"s");
+
+        	var svg = d3.select("body").append("svg")
+            	.attr("width", width + margin.left + margin.right)
+            	.attr("height", height + margin.top + margin.bottom)
+          	.append("g")
+            	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+        	d3.json(url+"samDay", function(error, data){
+            	data.forEach(function(d) {
+	                d.date = parseDate(d.date);
+    	            d.value = +d.value;
+        	    });
+            	function sortByDateAscending(a, b) {
+            	    // Dates will be cast to numbers automagically:
+            	    return a.date - b.date;
+            	}
+
+            	data = data.sort(sortByDateAscending);
+            	
+          	x.domain(data.map(function(d) { return d.date; }));
+          	y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+          	svg.append("g")
+            	.attr("class", "x axis")
+              	.attr("transform", "translate(0," + height + ")")
+              	.call(xAxis)
+            	.selectAll("text")
+              		.style("text-anchor", "end")
+              		.attr("dx", "-.8em")
+              		.attr("dy", "-.55em")
+              		.attr("transform", "rotate(-90)" );
+          	var yLabel="Samples per Day"
+    		if(url=="/dbtest/pep/"){
+        		yLabel="People per Day";
+        		}//if
+          	svg.append("g")
+              	.attr("class", "y axis")
+              	.call(yAxis)
+            	.append("text")
+              		.attr("transform", "rotate(-90)")
+              		.attr("y", 6)
+              		.attr("dy", ".71em")
+              		.style("text-anchor", "end")
+              		.text(yLabel);
+
+          	svg.selectAll("bar")
+              	.data(data)
+            	.enter().append("rect")
+              		.style("fill", "steelblue")
+              		.attr("x", function(d) { return x(d.date); })
+              		.attr("width", x.rangeBand())
+              		.attr("y", function(d) { return y(d.value); })
+              		.attr("height", function(d) { return height - y(d.value); });
+			});
+        }//history
+
+        function hour(url){
+        	d3.selectAll("svg").remove();
+        	
+        	var margin = {top: 50, right: 30, bottom: 60, left: 60},
+            width = 710 - margin.left - margin.right,
+            height = 600 - margin.top - margin.bottom;
+
+        	// Parse the date / time
+        	var	parseDate = d3.time.format("%H").parse;
+
+        	var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+        	var y = d3.scale.linear().range([height, 0]);
+
+        	var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .tickFormat(d3.time.format("%H"));
+
+        	var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+            .ticks(10,"s");
+
+        	var svg = d3.select("body").append("svg")
+            	.attr("width", width + margin.left + margin.right)
+            	.attr("height", height + margin.top + margin.bottom)
+          	.append("g")
+            	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+        	d3.json(url+"samHour", function(error, data){
+            	data.forEach(function(d) {
+	                d.date = parseDate(d.date);
+    	            d.value = +d.value;
+        	    });
+        	
+          	x.domain(data.map(function(d) { return d.date; }));
+          	y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+          	svg.append("g")
+            	.attr("class", "x axis")
+              	.attr("transform", "translate(0," + height + ")")
+              	.call(xAxis)
+            	.selectAll("text")
+              		.style("text-anchor", "end")
+              		.attr("dx", "-.8em")
+              		.attr("dy", "-.55em")
+              		.attr("transform", "rotate(-90)" );
+
+          	var yLabel="Samples per Hour"
+			if(url=="/dbtest/pep/"){
+				yLabel="People per hour";
+			}
+			
+          	svg.append("g")
+              	.attr("class", "y axis")
+              	.call(yAxis)
+            	.append("text")
+              		.attr("transform", "rotate(-90)")
+              		.attr("y", 6)
+              		.attr("dy", ".71em")
+              		.style("text-anchor", "end")
+              		.text(yLabel);
+
+          	svg.selectAll("bar")
+              	.data(data)
+            	.enter().append("rect")
+              		.style("fill", "steelblue")
+              		.attr("x", function(d) { return x(d.date); })
+              		.attr("width", x.rangeBand())
+              		.attr("y", function(d) { return y(d.value); })
+              		.attr("height", function(d) { return height - y(d.value); });
+			});
+        }//hour   
+        </script>
+    <ul class="tab">
+  	<li><a href="#" class="tablinks" onclick="openTap(event, 'byId')">Person ID</a></li>
+  	<li><a href="#" class="tablinks" onclick="openTap(event, 'byTime')">Time period</a></li>
+  	<li><a href="#" class="tablinks" onclick="openTap(event, 'Analytics')">Analytics</a></li>
+	</ul>
+
+	<div id="byId" class="tabcontent">
+  		<h3>Graph by person ID</h3>
+  		<p>Please choose the person ID and click button.</p>
+  		<select id="fld_base_profile_id" defaultValue="-1" class="m-wrap span10" field="fld_base_profile_id" appEditor="true"></select>
+    	<button type = "button" onclick ="drawblob('/dbtest/')">Draw person's trajectory </button>
+    	<script>
+    	d3.json("/dbtest/ids", function(error, JSON1) {
+            if (error) return console.warn(error);
+    		var combo = document.getElementById('fld_base_profile_id');
+    		for(var i = 0; i < JSON1.length; i++) {
+        		var profile = JSON1[i];
+    	    	var opt = document.createElement("option");
+    	    	opt.id = profile;
+    	    	opt.value = profile;
+    	    	opt.text = profile;
+    	    	combo.appendChild(opt);
+    		}//for
+    	});
+    	</script>
+	</div>
+
+	<div id="byTime" class="tabcontent">
+  		<h3>Filter by time</h3>
+  		<p>Please choose the period you want to display people's trajectory</p> 
+  		<p>Enter initial date:
+  		<input type="datetime" id="date1" value="2016-05-12 00:00:00">
+  		Enter final date:
+  		<input type="datetime" id="date2" value="2016-05-12 12:00:00">
+  		<button type = "button" onclick ="drawtime('/dbtest/')">Graph in time</button><br></p>
+  		<div id="slider"></div><br>
+	</div>
+	
+	<div id="Analytics" class="tabcontent">
+  		<button type = "button" onclick ="heatmap('/dbtest/')">Heatmap</button>
+  		<button type = "button" onclick ="history('/dbtest/')">Samples per day</button>
+  		<button type = "button" onclick ="history('/dbtest/pep/')">People per day</button>
+  		<button type = "button" onclick ="hour('/dbtest/')">Samples per hour</button>
+  		<button type = "button" onclick ="hour('/dbtest/pep/')">People per hour</button>
+  		<button type = "button" onclick ="distrib('/dbtest/')">Lifetime</button>
+  		<button type = "button" onclick ="horbar('/dbtest/')">Distance</button>
+	</div>
+    
+    </body>
+</html>
